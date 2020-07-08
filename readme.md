@@ -1,3 +1,3 @@
 # ml_models
 
-testing out different model structures with Python
+Testing out different model structures with Python and Processing.

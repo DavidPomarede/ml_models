@@ -47,3 +47,6 @@ def draw():
     for i in range(number_of_balls):
         balls[i].move()
         balls[i].display()
+        
+        
+        

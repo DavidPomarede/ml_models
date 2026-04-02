@@ -116,10 +116,21 @@ function initAudio() {
   if (audioReady) return;
   ac = new (window.AudioContext || window.webkitAudioContext)();
 
+  // iOS Safari keeps AudioContext suspended until a sound is played inside
+  // a user-gesture handler. Resume first, then play a silent 1-frame buffer
+  // to "unlock" the context before building the graph.
+  ac.resume();
+  const unlock = ac.createBuffer(1, 1, ac.sampleRate);
+  const unlockSrc = ac.createBufferSource();
+  unlockSrc.buffer = unlock;
+  unlockSrc.connect(ac.destination);
+  unlockSrc.start(0);
+
   masterGain = ac.createGain();
   masterGain.gain.value = 0.75;
   masterGain.connect(ac.destination);
 
+  // Build reverb after unlocking so heavy computation doesn't delay resume()
   const reverb = buildReverb();
   reverb.connect(masterGain);
 
@@ -132,7 +143,6 @@ function initAudio() {
   dryBus.connect(masterGain);
 
   audioReady = true;
-  if (ac.state === 'suspended') ac.resume();
 }
 
 /* ─── NOTES ──────────────────────────────────────────────────────────── */
@@ -386,7 +396,7 @@ function processConnections() {
       if (dist < thresh) {
         const t   = 1 - dist / thresh; // 0..1 proximity
         const key = `${i}-${j}`;
-        active.set ? active.add(key) : (active[key] = true);
+        active.add(key); // Set.prototype.add — was incorrectly falling back to object assignment
 
         a.connected = true;
         b.connected = true;
@@ -424,10 +434,9 @@ function processConnections() {
     }
   }
 
-  // Update previous connections
+  // Swap active → prevConn for next frame's spark-spawn check
   prevConn.clear();
-  if (active.forEach) active.forEach(k => prevConn.add(k));
-  else for (const k in active) prevConn.add(k);
+  active.forEach(k => prevConn.add(k));
 }
 
 /* ─── AUDIO PER CIRCLE ───────────────────────────────────────────────── */

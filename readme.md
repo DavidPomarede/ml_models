@@ -1,7 +1,8 @@
 # ml_models
 
-claude/floating-circles-synth-game-8H1m5
+test out here:
 
+https://davidpomarede.github.io/ml_models/synth_circles.html
 
 Testing out different model structures with Python and Processing.
 

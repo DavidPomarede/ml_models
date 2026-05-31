@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ARCANA VERA — The Thornwood Rite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;500;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0c0a13; --ink2:#140f20; --ink3:#1d1730;
+  --gold:#c9a24b; --gold-lt:#ecd089; --gold-dk:#7c602a;
+  --parch:#ece0c4; --parch2:#ddccaa; --parch-sh:#bda878;
+  --ether:#9a86d6; --ether-dk:#5b4d8a;
+  --blood:#9a2b2b; --blood-lt:#c84a4a;
+  --leaf:#3f6b4a;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none;}
+html,body{margin:0;padding:0;height:100%;background:var(--ink);overflow:hidden;}
+body{
+  font-family:'EB Garamond',Georgia,serif; color:var(--parch);
+  user-select:none; -webkit-user-select:none;
+  background:
+    radial-gradient(140% 90% at 50% -10%, #241a3a 0%, var(--ink2) 38%, var(--ink) 75%);
+  position:fixed; inset:0;
+  touch-action:manipulation;
+}
+/* atmosphere overlays */
+.grain{position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+.vignette{position:fixed;inset:0;pointer-events:none;z-index:55;
+  background:radial-gradient(120% 80% at 50% 42%, transparent 52%, rgba(0,0,0,.55) 100%);}
+.embers{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden;}
+.ember{position:absolute;bottom:-10px;width:3px;height:3px;border-radius:50%;
+  background:radial-gradient(circle,var(--gold-lt),rgba(201,162,75,0));
+  animation:rise linear infinite;opacity:0;}
+@keyframes rise{0%{transform:translateY(0) translateX(0);opacity:0}
+  10%{opacity:.8}60%{opacity:.5}100%{transform:translateY(-105vh) translateX(20px);opacity:0}}
+
+.screen{position:absolute;inset:0;display:none;flex-direction:column;z-index:10;}
+.screen.active{display:flex;}
+
+/* ---------- TITLE ---------- */
+#titleScreen{align-items:center;justify-content:center;text-align:center;padding:24px;}
+.title-wrap{max-width:520px;animation:fadeUp 1.4s ease both;}
+.veil-sigil{width:120px;height:120px;margin:0 auto 6px;filter:drop-shadow(0 0 14px rgba(201,162,75,.5));animation:flicker 5s ease-in-out infinite;}
+.game-title{font-family:'Cinzel Decorative',serif;font-weight:900;
+  font-size:clamp(34px,11vw,62px);line-height:.95;letter-spacing:2px;
+  color:var(--gold-lt);margin:4px 0 0;
+  text-shadow:0 0 22px rgba(201,162,75,.35),0 2px 0 #000;}
+.game-sub{font-family:'Cinzel',serif;letter-spacing:6px;font-size:clamp(11px,3.4vw,15px);
+  color:var(--parch-sh);margin:8px 0 18px;text-transform:uppercase;}
+.epigraph{font-style:italic;color:#b9ad8e;max-width:420px;margin:0 auto 26px;
+  font-size:clamp(14px,4vw,17px);line-height:1.5;opacity:.9;}
+.epigraph .src{display:block;margin-top:8px;font-style:normal;letter-spacing:2px;font-size:12px;color:var(--gold-dk);text-transform:uppercase;}
+.menu-btns{display:flex;flex-direction:column;gap:12px;align-items:center;}
+.btn{font-family:'Cinzel',serif;letter-spacing:3px;text-transform:uppercase;
+  font-size:15px;color:var(--parch);background:linear-gradient(180deg,#231a36,#160f24);
+  border:1px solid var(--gold-dk);padding:14px 30px;border-radius:3px;cursor:pointer;
+  min-width:230px;position:relative;transition:.25s;
+  box-shadow:0 0 0 1px rgba(0,0,0,.6) inset, 0 6px 18px rgba(0,0,0,.5);}
+.btn:active{transform:translateY(1px) scale(.985);}
+.btn.primary{color:#1a1326;background:linear-gradient(180deg,var(--gold-lt),var(--gold));
+  border-color:var(--gold-lt);font-weight:600;
+  box-shadow:0 0 22px rgba(201,162,75,.4),0 6px 16px rgba(0,0,0,.5);}
+.btn.ghost{min-width:0;padding:10px 18px;font-size:12px;color:var(--parch-sh);background:transparent;border-color:#3a2f1e;}
+.credit{position:absolute;bottom:calc(10px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;color:#4a4060;font-size:11px;letter-spacing:1px;}
+
+/* ---------- LORE / CODEX ---------- */
+.sheet{position:absolute;inset:0;z-index:30;display:none;flex-direction:column;
+  background:linear-gradient(180deg,#15101f,#0c0a13);}
+.sheet.active{display:flex;animation:fadeUp .4s ease both;}
+.sheet-head{display:flex;align-items:center;gap:12px;padding:calc(14px + env(safe-area-inset-top)) 16px 12px;
+  border-bottom:1px solid #2a2236;flex:0 0 auto;}
+.sheet-head h2{font-family:'Cinzel Decorative',serif;color:var(--gold-lt);margin:0;font-size:20px;letter-spacing:1px;flex:1;}
+.x-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--gold-dk);background:#1c1530;
+  color:var(--gold-lt);font-size:18px;cursor:pointer;flex:0 0 auto;line-height:1;}
+.sheet-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 18px calc(40px + env(safe-area-inset-bottom));flex:1;}
+.lore-h{font-family:'Cinzel',serif;color:var(--gold);letter-spacing:2px;text-transform:uppercase;
+  font-size:13px;margin:24px 0 6px;border-bottom:1px solid #2a2236;padding-bottom:5px;}
+.lore-h:first-child{margin-top:0;}
+.lore-p{line-height:1.62;color:#cabf9f;margin:0 0 12px;font-size:16px;}
+.lore-p .cap{color:var(--gold-lt);font-style:italic;}
+.dropcap::first-letter{font-family:'UnifrakturCook',serif;font-size:3.4em;line-height:.8;float:left;
+  color:var(--gold);margin:6px 8px 0 0;}
+
+/* codex grid */
+.codex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;}
+
+/* ---------- GAME ---------- */
+#gameScreen{display:none;}
+#gameScreen.active{display:flex;}
+.hud{flex:0 0 auto;}
+.topbar{display:flex;align-items:center;gap:8px;padding:calc(6px + env(safe-area-inset-top)) 10px 6px;}
+.topbar .spacer{flex:1;}
+.mini-btn{font-family:'Cinzel',serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--parch-sh);background:#181226;border:1px solid #322748;border-radius:3px;padding:7px 10px;cursor:pointer;}
+.foe-strip,.you-strip{display:flex;align-items:center;gap:10px;padding:4px 12px;}
+.orb{position:relative;width:50px;height:50px;flex:0 0 auto;cursor:default;}
+.orb.tappable{cursor:pointer;}
+.orb svg{display:block;}
+.orb .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:'Cinzel',serif;font-weight:600;font-size:19px;color:#fff;text-shadow:0 1px 3px #000;}
+.who{font-family:'Cinzel',serif;letter-spacing:1px;font-size:12px;color:var(--parch-sh);}
+.who b{display:block;color:var(--parch);font-size:14px;letter-spacing:1.5px;}
+.resbar{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-top:2px;}
+.pip{width:12px;height:16px;border-radius:2px 2px 3px 3px;background:#241a36;border:1px solid #3a2c52;position:relative;}
+.pip.full{background:linear-gradient(180deg,var(--ether),var(--ether-dk));border-color:var(--ether);
+  box-shadow:0 0 6px rgba(154,134,214,.6);}
+.pip.land{background:linear-gradient(180deg,#3a2d18,#241a0e);border-color:var(--gold-dk);}
+.pip.land.lit{background:linear-gradient(180deg,var(--gold-lt),var(--gold-dk));box-shadow:0 0 6px rgba(201,162,75,.6);}
+.res-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:#6b5e44;text-transform:uppercase;margin-right:2px;}
+.deckcount{font-family:'Cinzel',serif;font-size:11px;color:#6b5e44;}
+
+/* battlefield */
+.field{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;gap:6px;
+  padding:2px 8px;min-height:0;position:relative;}
+.row{display:flex;gap:7px;justify-content:center;align-items:center;min-height:92px;
+  overflow-x:auto;overflow-y:visible;-webkit-overflow-scrolling:touch;padding:6px 4px;scrollbar-width:none;}
+.row::-webkit-scrollbar{display:none;}
+.row.empty::after{content:attr(data-empty);font-style:italic;color:#43395a;font-size:13px;letter-spacing:1px;}
+.divider{display:flex;align-items:center;justify-content:center;gap:14px;padding:2px 0;}
+.divider .ln{height:1px;flex:1;max-width:80px;background:linear-gradient(90deg,transparent,var(--gold-dk),transparent);}
+.turn-orb{font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;}
+.banner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  pointer-events:none;text-align:center;z-index:8;opacity:0;}
+.banner.show{animation:bannerPop 1.5s ease forwards;}
+.banner .bt{font-family:'Cinzel Decorative',serif;font-size:30px;color:var(--gold-lt);
+  text-shadow:0 0 20px rgba(201,162,75,.6),0 2px 6px #000;letter-spacing:1px;}
+
+/* token (board minion) */
+.token{flex:0 0 auto;width:66px;height:88px;border-radius:6px;position:relative;cursor:pointer;
+  background:linear-gradient(160deg,var(--parch),var(--parch2));
+  border:1px solid var(--gold-dk);box-shadow:0 3px 7px rgba(0,0,0,.5);
+  transition:transform .15s, box-shadow .15s;overflow:hidden;}
+.token .tart{position:absolute;inset:3px 3px 18px;border-radius:3px;overflow:hidden;
+  background:radial-gradient(circle at 50% 40%,#fbf3dd,#d8c69e);}
+.token .trn{position:absolute;top:2px;left:0;right:0;text-align:center;font-family:'Cinzel',serif;
+  font-size:8px;color:#5a4a28;letter-spacing:1px;}
+.token .tstat{position:absolute;bottom:-1px;width:100%;display:flex;justify-content:space-between;padding:0 3px 1px;}
+.token .atk,.token .vit{font-family:'Cinzel',serif;font-weight:600;font-size:13px;color:#fff;
+  width:19px;height:17px;display:flex;align-items:center;justify-content:center;border-radius:3px;}
+.token .atk{background:radial-gradient(circle,var(--blood-lt),var(--blood));box-shadow:0 0 4px rgba(0,0,0,.5);}
+.token .vit{background:radial-gradient(circle,#caa24b,#7c602a);color:#1a1326;}
+.token.ready{box-shadow:0 0 0 2px var(--gold-lt),0 3px 9px rgba(0,0,0,.5);}
+.token.ready::before{content:"";position:absolute;inset:-3px;border-radius:8px;
+  border:1px solid rgba(236,208,137,.6);animation:pulseRing 1.8s ease-in-out infinite;pointer-events:none;}
+.token.selected{transform:translateY(-9px) scale(1.05);box-shadow:0 0 0 2px var(--blood-lt),0 0 18px rgba(200,74,74,.7);}
+.token.target{box-shadow:0 0 0 2px var(--blood-lt),0 0 16px rgba(200,74,74,.7);animation:targetPulse 1s infinite;}
+.token.ward .tart{box-shadow:inset 0 0 0 2px rgba(63,107,74,.8);}
+.token.veiled{opacity:.86;}
+.token.veiled .tart{filter:saturate(.5) brightness(.85);}
+.kwdot{position:absolute;top:1px;right:2px;font-size:8px;}
+.token.dying{animation:die .45s ease forwards;}
+.token.born{animation:born .5s ease;}
+.token.hit{animation:hit .4s ease;}
+
+@keyframes pulseRing{0%,100%{opacity:.25}50%{opacity:.9}}
+@keyframes targetPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes die{to{transform:scale(.4) rotate(12deg);opacity:0;}}
+@keyframes born{from{transform:scale(.3) translateY(10px);opacity:0;}}
+@keyframes hit{25%{transform:translateX(-4px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+
+/* hand */
+.handwrap{flex:0 0 auto;position:relative;padding:4px 0 calc(6px + env(safe-area-inset-bottom));}
+.hand{display:flex;gap:6px;justify-content:flex-start;align-items:flex-end;overflow-x:auto;
+  -webkit-overflow-scrolling:touch;padding:8px 14px 6px;scrollbar-width:none;scroll-padding:14px;}
+.hand::-webkit-scrollbar{display:none;}
+.endbtn{position:absolute;right:10px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:9;
+  font-family:'Cinzel',serif;letter-spacing:1.5px;text-transform:uppercase;font-size:11px;
+  color:#1a1326;background:linear-gradient(180deg,var(--gold-lt),var(--gold));
+  border:1px solid var(--gold-lt);border-radius:24px;padding:11px 16px;cursor:pointer;
+  box-shadow:0 0 16px rgba(201,162,75,.4);}
+.endbtn:active{transform:scale(.95);}
+.endbtn.waiting{filter:grayscale(.7) brightness(.7);}
+
+/* full tarot card (hand + codex + inspect) */
+.card{flex:0 0 auto;width:118px;height:188px;border-radius:8px;cursor:pointer;position:relative;
+  background:
+    linear-gradient(145deg,#fbf4df 0%,#efe2c2 55%,#ddc99c 100%);
+  border:2px solid var(--gold-dk);
+  box-shadow:0 5px 14px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.4);
+  transition:transform .18s ease, box-shadow .18s ease;overflow:hidden;}
+.card.playable{box-shadow:0 0 0 2px var(--gold-lt),0 6px 16px rgba(0,0,0,.55),0 0 18px rgba(201,162,75,.35);}
+.card.unaffordable{filter:grayscale(.55) brightness(.82);}
+.card.selected{transform:translateY(-22px) scale(1.04);box-shadow:0 0 0 2px var(--gold-lt),0 0 26px rgba(236,208,137,.6);}
+.card .frame{position:absolute;inset:5px;border:1px solid var(--gold-dk);border-radius:5px;pointer-events:none;
+  box-shadow:inset 0 0 0 1px rgba(124,96,42,.4);}
+.card .frame::before{content:"";position:absolute;inset:3px;border:1px solid rgba(124,96,42,.35);border-radius:3px;}
+.card .rn{position:absolute;top:9px;left:0;right:0;text-align:center;font-family:'Cinzel',serif;
+  font-weight:600;font-size:12px;letter-spacing:2px;color:#6b4e1d;}
+.card .art{position:absolute;top:26px;left:11px;right:11px;height:104px;border-radius:3px;overflow:hidden;
+  background:radial-gradient(circle at 50% 38%,#fcf6e3,#e7d4ab 70%,#d3bd8f);}
+.card .art svg{width:100%;height:100%;display:block;}
+.card .name{position:absolute;bottom:30px;left:6px;right:6px;text-align:center;font-family:'Cinzel',serif;
+  font-weight:600;font-size:11px;letter-spacing:.5px;color:#4a3414;line-height:1.05;
+  text-transform:uppercase;}
+.card .kwline{position:absolute;bottom:20px;left:0;right:0;text-align:center;font-style:italic;
+  font-size:9px;color:var(--leaf);letter-spacing:1px;}
+.card .cost{position:absolute;top:-2px;right:-2px;width:30px;height:30px;display:flex;align-items:center;
+  justify-content:center;font-family:'Cinzel',serif;font-weight:700;font-size:14px;color:#1a1326;
+  background:radial-gradient(circle at 38% 32%,var(--gold-lt),var(--gold) 60%,var(--gold-dk));
+  border-radius:50%;border:1px solid var(--gold-lt);box-shadow:0 1px 4px rgba(0,0,0,.5);z-index:3;}
+.card.land .cost{display:none;}
+.card .botstat{position:absolute;bottom:5px;left:0;right:0;display:flex;justify-content:space-between;padding:0 9px;}
+.card .botstat .s{font-family:'Cinzel',serif;font-weight:700;font-size:14px;}
+.card .botstat .a{color:var(--blood);}
+.card .botstat .v{color:#7c602a;}
+.card.land .botstat{display:none;}
+.card.land .name{bottom:38px;}
+.card.land .lwave{position:absolute;bottom:10px;left:0;right:0;text-align:center;color:var(--gold-dk);font-size:18px;letter-spacing:4px;}
+
+/* inspect modal */
+.inspect{position:absolute;inset:0;z-index:40;display:none;align-items:center;justify-content:center;
+  background:rgba(6,4,12,.82);backdrop-filter:blur(3px);padding:20px;}
+.inspect.active{display:flex;animation:fadeUp .25s ease both;}
+.inspect-inner{max-width:330px;text-align:center;}
+.inspect .bigcard{width:200px;height:318px;margin:0 auto;}
+.inspect .bigcard .rn{font-size:18px;top:14px;}
+.inspect .bigcard .art{top:44px;height:178px;left:18px;right:18px;}
+.inspect .bigcard .name{bottom:50px;font-size:17px;}
+.inspect .bigcard .kwline{bottom:36px;font-size:13px;}
+.inspect .bigcard .cost{width:46px;height:46px;font-size:21px;}
+.inspect .bigcard .botstat .s{font-size:22px;}
+.inspect .bigcard .botstat{bottom:9px;padding:0 16px;}
+.inspect .ilore{font-style:italic;color:#cabf9f;line-height:1.5;margin:16px auto 4px;font-size:15px;max-width:300px;}
+.inspect .iability{color:var(--gold-lt);font-size:14px;margin:8px 0 16px;font-family:'Cinzel',serif;letter-spacing:.5px;}
+.inspect .iactions{display:flex;gap:10px;justify-content:center;}
+
+/* result */
+#resultScreen{align-items:center;justify-content:center;text-align:center;padding:30px;z-index:45;
+  background:radial-gradient(120% 90% at 50% 30%,#1c1430,var(--ink) 70%);}
+.result-title{font-family:'Cinzel Decorative',serif;font-size:clamp(38px,13vw,72px);margin:0;letter-spacing:2px;}
+.result-title.win{color:var(--gold-lt);text-shadow:0 0 30px rgba(201,162,75,.5);}
+.result-title.lose{color:var(--blood-lt);text-shadow:0 0 30px rgba(154,43,43,.5);}
+.result-flavor{font-style:italic;color:#c2b694;max-width:420px;margin:18px auto 30px;line-height:1.55;font-size:17px;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes flicker{0%,100%{opacity:1}48%{opacity:.92}50%{opacity:.7}52%{opacity:.95}}
+
+/* floating combat numbers */
+.float{position:absolute;z-index:50;font-family:'Cinzel',serif;font-weight:700;font-size:22px;
+  pointer-events:none;animation:floatUp 1s ease forwards;text-shadow:0 1px 3px #000;}
+.float.dmg{color:var(--blood-lt);} .float.heal{color:#7fd18a;}
+@keyframes floatUp{0%{opacity:0;transform:translateY(6px) scale(.8)}20%{opacity:1;transform:scale(1.1)}100%{opacity:0;transform:translateY(-34px)}}
+
+.toast{position:absolute;left:50%;transform:translateX(-50%);z-index:48;
+  background:rgba(20,15,32,.94);border:1px solid var(--gold-dk);border-radius:24px;
+  padding:9px 18px;font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;color:var(--gold-lt);
+  white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .3s;}
+.toast.show{opacity:1;}
+@media (max-height:680px){
+  .card{width:104px;height:166px;} .token{width:60px;height:80px;}
+  .game-title{margin-top:0;}
+}
+</style>
+</head>
+<body>
+<div class="embers" id="embers"></div>
+<div class="vignette"></div>
+<div class="grain"></div>
+
+<!-- TITLE -->
+<div class="screen active" id="titleScreen">
+  <div class="title-wrap">
+    <svg class="veil-sigil" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="44" fill="none" stroke="#c9a24b" stroke-width="1.2"/>
+      <circle cx="50" cy="50" r="37" fill="none" stroke="#7c602a" stroke-width=".7"/>
+      <g stroke="#ecd089" stroke-width="1.1" fill="none">
+        <path d="M50 14 L62 50 L50 86 L38 50 Z"/>
+        <path d="M16 50 L50 38 L84 50 L50 62 Z"/>
+        <circle cx="50" cy="50" r="9" fill="#0c0a13" stroke="#ecd089"/>
+        <path d="M50 41 L50 59 M41 50 L59 50"/>
+      </g>
+      <g stroke="#c9a24b" stroke-width=".6">
+        <line x1="50" y1="6" x2="50" y2="13"/><line x1="50" y1="87" x2="50" y2="94"/>
+        <line x1="6" y1="50" x2="13" y2="50"/><line x1="87" y1="50" x2="94" y2="50"/>
+      </g>
+    </svg>
+    <h1 class="game-title">Arcana<br>Vera</h1>
+    <div class="game-sub">The Thornwood Rite</div>
+    <p class="epigraph">"We do not summon what sleeps beneath the dormitory. We merely deal it a fair hand, and pray it does not win."
+      <span class="src">— Statutes of the Veiled Lantern, fol. I</span></p>
+    <div class="menu-btns">
+      <button class="btn primary" onclick="Game.start()">Begin the Rite</button>
+      <button class="btn" onclick="UI.openLore()">The Order &amp; Its Secrets</button>
+      <button class="btn" onclick="UI.openCodex()">Codex of the Arcana</button>
+      <button class="btn ghost" onclick="UI.openHow()">How the Duel is Played</button>
+    </div>
+  </div>
+  <div class="credit">An occult duel of the Major Arcana · Thornwood Hall, Room IX</div>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="gameScreen">
+  <div class="hud">
+    <div class="topbar">
+      <button class="mini-btn" onclick="Game.confirmQuit()">⮌ Leave</button>
+      <span class="spacer"></span>
+      <button class="mini-btn" onclick="UI.openCodex()">Codex</button>
+      <button class="mini-btn" onclick="UI.openLore()">Lore</button>
+    </div>
+    <div class="foe-strip">
+      <div class="orb tappable" id="foeOrb" onclick="Game.tapFace(1)">
+        <svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="22" fill="#2a0f0f" stroke="#9a2b2b" stroke-width="2"/>
+        <circle cx="25" cy="25" r="22" fill="none" stroke="#c84a4a" stroke-width=".6" opacity=".6"/></svg>
+        <span class="num" id="foeVit">20</span>
+      </div>
+      <div class="who"><b>The Order</b>
+        <div class="resbar" id="foeRes"></div>
+      </div>
+      <span class="spacer"></span>
+      <span class="deckcount">⛬ <span id="foeDeck">25</span></span>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="row empty" id="foeBoard" data-empty="— the Order's circle is empty —"></div>
+    <div class="divider">
+      <span class="ln"></span><span class="turn-orb" id="turnOrb">Your Rite</span><span class="ln"></span>
+    </div>
+    <div class="row empty" id="youBoard" data-empty="— your circle is empty —"></div>
+    <div class="banner" id="banner"><div class="bt" id="bannerText"></div></div>
+  </div>
+
+  <div class="hud">
+    <div class="you-strip">
+      <div class="orb tappable" id="youOrb">
+        <svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="22" fill="#1a2a14" stroke="#caa24b" stroke-width="2"/>
+        <circle cx="25" cy="25" r="22" fill="none" stroke="#ecd089" stroke-width=".6" opacity=".6"/></svg>
+        <span class="num" id="youVit">20</span>
+      </div>
+      <div class="who"><b>Initiate</b>
+        <div class="resbar" id="youRes"></div>
+      </div>
+      <span class="spacer"></span>
+      <span class="deckcount">⛬ <span id="youDeck">26</span></span>
+    </div>
+  </div>
+
+  <div class="handwrap">
+    <div class="hand" id="hand"></div>
+    <button class="endbtn" id="endBtn" onclick="Game.endTurn()">End Rite</button>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<!-- RESULT -->
+<div class="screen" id="resultScreen">
+  <h1 class="result-title" id="resultTitle">Victory</h1>
+  <p class="result-flavor" id="resultFlavor"></p>
+  <div class="menu-btns">
+    <button class="btn primary" onclick="Game.start()">Duel Again</button>
+    <button class="btn" onclick="UI.toTitle()">Return to the Veil</button>
+  </div>
+</div>
+
+<!-- LORE SHEET -->
+<div class="sheet" id="loreSheet">
+  <div class="sheet-head"><h2 id="loreTitle">The Order of the Veiled Lantern</h2>
+    <button class="x-btn" onclick="UI.closeSheets()">✕</button></div>
+  <div class="sheet-body" id="loreBody"></div>
+</div>
+
+<!-- CODEX SHEET -->
+<div class="sheet" id="codexSheet">
+  <div class="sheet-head"><h2>Codex of the Arcana</h2>
+    <button class="x-btn" onclick="UI.closeSheets()">✕</button></div>
+  <div class="sheet-body"><div class="codex-grid" id="codexGrid"></div></div>
+</div>
+
+<!-- INSPECT -->
+<div class="inspect" id="inspect" onclick="if(event.target===this)UI.closeInspect()">
+  <div class="inspect-inner">
+    <div id="inspectCard"></div>
+    <div class="ilore" id="inspectLore"></div>
+    <div class="iability" id="inspectAbility"></div>
+    <div class="iactions" id="inspectActions"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   ARCANA VERA — THE THORNWOOD RITE
+   Engine logic validated via 4000-game simulation.
+   ============================================================ */
+"use strict";
+
+/* ---------------- TAROT ART (hand-built SVG emblems) ---------------- */
+const GA="#6b4e1d", GB="#8a6d2a", GC="#b8923f", GD="#caa24b", INKART="#241a12";
+function halo(){return `<g stroke="${GB}" stroke-width=".4" opacity=".4">`+
+  Array.from({length:24},(_,i)=>{const a=i*15*Math.PI/180,x=50+Math.cos(a)*46,y=50+Math.sin(a)*46;
+  return `<line x1="50" y1="50" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/>`;}).join("")+`</g>
+  <circle cx="50" cy="50" r="46" fill="none" stroke="${GA}" stroke-width=".6" opacity=".5"/>`;}
+function S(inner){return `<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">${halo()}<g fill="none" stroke="${GA}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${inner}</g></svg>`;}
+const figure=(x,y,s)=>`<circle cx="${x}" cy="${y-7*s}" r="${3.5*s}"/><path d="M${x} ${y-3.5*s} L${x} ${y+6*s} M${x} ${y-1*s} L${x-5*s} ${y+3*s} M${x} ${y-1*s} L${x+5*s} ${y+3*s} M${x} ${y+6*s} L${x-4*s} ${y+13*s} M${x} ${y+6*s} L${x+4*s} ${y+13*s}"/>`;
+const sun=(x,y,r)=>`<circle cx="${x}" cy="${y}" r="${r}"/>`+Array.from({length:12},(_,i)=>{const a=i*30*Math.PI/180;return `<line x1="${(x+Math.cos(a)*(r+2)).toFixed(1)}" y1="${(y+Math.sin(a)*(r+2)).toFixed(1)}" x2="${(x+Math.cos(a)*(r+6)).toFixed(1)}" y2="${(y+Math.sin(a)*(r+6)).toFixed(1)}"/>`;}).join("");
+const star=(x,y,r)=>{let p="";for(let i=0;i<8;i++){const a=i*45*Math.PI/180,rr=i%2?r*.42:r;p+=(i?"L":"M")+(x+Math.cos(a-1.57)*rr).toFixed(1)+" "+(y+Math.sin(a-1.57)*rr).toFixed(1)+" ";}return `<path d="${p}Z"/>`;};
+
+function ART(id){
+  switch(id){
+    case 0: return S(sun(76,24,7)+figure(42,54,1.5)+`<path d="M30 42 L24 30 M24 30 L20 32 M24 30 L28 28"/><circle cx="60" cy="70" r="4"/><path d="M58 72 L64 70"/>`); // Fool: sun, traveler, dog
+    case 1: return S(`<path d="M50 22 a6 4 0 1 0 .1 0 M44 22 a6 4 0 1 0 .1 0"/>`+figure(50,52,1.5)+`<path d="M50 38 L50 30 M58 36 L64 30"/><line x1="34" y1="70" x2="66" y2="70"/><path d="M40 67 l0 -4 M48 67 l0 -4 M56 67 l3 -3 M62 67 l2 3"/>`); // Magician: infinity, raised wand, table+suits
+    case 2: return S(`<path d="M30 22 L30 78 M70 22 L70 78"/><path d="M30 24 q20 -8 40 0 M30 76 q20 8 40 0"/><path d="M42 46 a8 8 0 1 1 16 0 a6 6 0 0 1 -16 0" /><path d="M50 60 q-7 0 -7 10 l14 0 q0 -10 -7 -10"/>`); // Priestess: two pillars, veil, crescent
+    case 3: return S(`<path d="M38 30 l4 -8 4 8 4 -8 4 8 4 -8 4 8"/><path d="M50 38 a7 7 0 1 0 .1 0 M50 52 L50 62 M44 56 L56 56"/><path d="M34 74 q4 -10 0 -16 M40 76 q3 -12 -1 -18 M66 74 q-4 -10 0 -16 M60 76 q-3 -12 1 -18"/>`); // Empress: crown, venus, wheat
+    case 4: return S(`<path d="M34 40 L34 76 L66 76 L66 40"/><path d="M30 40 q4 -10 10 -4 M70 40 q-4 -10 -10 -4"/><circle cx="36" cy="36" r="3"/><circle cx="64" cy="36" r="3"/>`+figure(50,52,1.3)+`<path d="M62 40 L62 60 M59 44 a3 3 0 1 1 6 0"/>`); // Emperor: throne, rams, ankh
+    case 5: return S(`<path d="M40 28 L60 28 M44 24 L44 28 M50 22 L50 28 M56 24 L56 28"/>`+`<path d="M44 60 l-4 -22 a10 10 0 0 1 20 0 l-4 22 Z"/><line x1="44" y1="68" x2="56" y2="68"/><path d="M40 78 l8 -10 M60 78 l-8 -10 M44 70 a3 3 0 1 0 0 6 M56 70 a3 3 0 1 1 0 6"/>`); // Hierophant: triple crown, crossed keys
+    case 6: return S(sun(50,22,6)+figure(34,58,1.25)+figure(66,58,1.25)+`<path d="M44 30 q6 6 12 0"/>`); // Lovers: angel sun, two figures
+    case 7: return S(`<path d="M30 70 L70 70 L66 54 L34 54 Z"/><circle cx="38" cy="76" r="4"/><circle cx="62" cy="76" r="4"/><path d="M34 54 L34 40 L66 40 L66 54"/><path d="M40 36 l2 -6 m8 6 l0 -7 m8 7 l-2 -6"/>`+figure(50,50,.8)); // Chariot: cart, wheels, canopy stars
+    case 8: return S(`<path d="M50 26 a5 3 0 1 0 .1 0 M44 26 a5 3 0 1 0 .1 0"/><circle cx="50" cy="58" r="14"/><path d="M40 56 q10 -8 20 0 M44 64 q6 4 12 0 M44 50 l-2 -4 M56 50 l2 -4"/><path d="M64 48 q6 2 4 8"/>`); // Strength: infinity over lion+hand
+    case 9: return S(`<path d="M40 30 L40 78"/><circle cx="62" cy="40" r="9"/>`+star(62,40,5)+`<path d="M53 40 L40 46 M71 40 L78 36"/>`); // Hermit: staff + lantern with star
+    case 10:{let spokes="";for(let i=0;i<8;i++){const a=i*45*Math.PI/180;spokes+=`<line x1="${(50+Math.cos(a)*6).toFixed(1)}" y1="${(50+Math.sin(a)*6).toFixed(1)}" x2="${(50+Math.cos(a)*22).toFixed(1)}" y2="${(50+Math.sin(a)*22).toFixed(1)}"/>`;}return S(`<circle cx="50" cy="50" r="24"/><circle cx="50" cy="50" r="6"/>${spokes}<path d="M50 16 l-4 6 8 0 Z M84 50 l-6 -4 0 8 Z M50 84 l4 -6 -8 0 Z M16 50 l6 4 0 -8 Z"/>`);} // Wheel
+    case 11: return S(`<line x1="50" y1="20" x2="50" y2="46"/><path d="M44 26 L50 20 L56 26"/><path d="M30 50 L70 50 M50 46 L50 60"/><path d="M30 50 l-6 12 12 0 Z M70 50 l-6 12 12 0 Z" /><line x1="42" y1="74" x2="58" y2="74"/>`); // Justice: sword + scales
+    case 12: return S(`<line x1="28" y1="26" x2="72" y2="26"/><line x1="58" y1="26" x2="58" y2="40"/><circle cx="52" cy="46" r="5"/><path d="M52 51 L52 66 M52 56 L46 62 M52 56 L58 62 M52 51 L46 44 M52 51 L58 44"/><path d="M44 44 a9 9 0 1 1 16 0" stroke-dasharray="1 2"/>`); // Hanged Man (inverted)
+    case 13: return S(`<path d="M42 44 a8 8 0 1 1 16 0 q0 6 -4 8 l0 6 -8 0 0 -6 q-4 -2 -4 -8 Z"/><circle cx="46" cy="46" r="2"/><circle cx="54" cy="46" r="2"/><path d="M44 56 l12 0"/><path d="M30 72 Q44 58 70 30 M66 30 a5 5 0 1 0 8 4"/>`); // Death: skull + scythe
+    case 14: return S(`<path d="M36 38 l8 14 -16 0 Z M64 38 l-8 14 16 0 Z" /><path d="M40 44 Q50 26 60 44"/><path d="M44 30 q6 -8 12 0" stroke-dasharray="1 2"/><line x1="34" y1="60" x2="42" y2="60"/><line x1="58" y1="60" x2="66" y2="60"/>`); // Temperance: two cups, stream, wings
+    case 15:{let p="";for(let i=0;i<5;i++){const a=(i*144-90)*Math.PI/180;p+=(i?"L":"M")+(50+Math.cos(a)*9).toFixed(1)+" "+(34+Math.sin(a)*9).toFixed(1)+" ";}return S(`<path d="M${p}Z"/><path d="M40 26 l-4 -6 M60 26 l4 -6"/>`+figure(38,66,1)+figure(62,66,1)+`<path d="M44 60 l12 0" stroke-dasharray="2 2"/>`);} // Devil: pentagram, horns, chained figures
+    case 16: return S(`<path d="M38 76 L38 40 L62 40 L62 76 Z"/><path d="M38 40 l3 -5 4 5 4 -5 4 5 4 -5 3 5"/><path d="M70 22 L54 46 L62 46 L48 70" stroke="${GC}"/><circle cx="44" cy="32" r="2"/><circle cx="56" cy="34" r="2"/>`); // Tower: tower + lightning + crown
+    case 17: return S(star(50,32,12)+star(30,54,5)+star(70,54,5)+star(38,68,4)+star(62,68,4)+figure(50,64,.8)+`<path d="M40 64 q-6 6 -8 12 M60 64 q6 6 8 12"/>`); // Star
+    case 18: return S(`<path d="M50 18 a16 16 0 1 0 8 30 a13 13 0 1 1 -8 -30 Z"/><circle cx="52" cy="30" r="1.5"/><path d="M32 78 L36 54 L40 78 M60 78 L64 54 L68 78"/><path d="M48 56 l4 0 -2 18 -2 -18" /><path d="M44 64 l1 -3 m10 3 l-1 -3"/>`); // Moon: face moon, towers, path, drops
+    case 19: return S(sun(50,40,15)+`<circle cx="50" cy="40" r="9"/><circle cx="46" cy="38" r="1"/><circle cx="54" cy="38" r="1"/><path d="M46 43 q4 3 8 0"/>`+figure(50,72,1)+`<line x1="30" y1="80" x2="70" y2="80"/>`); // Sun
+    case 20: return S(`<path d="M30 32 a8 8 0 1 1 14 4 l-14 6 0 -10 Z"/><path d="M34 36 L60 28"/><circle cx="60" cy="26" r="3"/><path d="M34 76 L66 76 L66 64 L34 64 Z"/>`+figure(42,68,.7)+figure(58,68,.7)); // Judgement: angel trumpet, rising
+    case 21: return S(`<ellipse cx="50" cy="50" rx="22" ry="30" /><path d="M50 24 q-6 4 0 8 q6 -4 0 -8 M50 76 q-6 -4 0 -8 q6 4 0 8" stroke-dasharray="1 2"/>`+figure(50,54,1.4)+`<path d="M50 50 l-7 6 M50 50 l7 6"/><circle cx="24" cy="24" r="2"/><circle cx="76" cy="24" r="2"/><circle cx="24" cy="76" r="2"/><circle cx="76" cy="76" r="2"/>`); // World: wreath + dancer + 4 glyphs
+    case 99: return S(`<path d="M36 34 L64 34 L58 56 a8 10 0 0 1 -16 0 Z"/><line x1="50" y1="64" x2="50" y2="74"/><line x1="40" y1="74" x2="60" y2="74"/><path d="M44 40 q6 8 12 0 M46 48 q4 5 8 0" stroke="${GC}"/><path d="M50 20 l6 8 -6 8 -6 -8 Z"/>`); // Prahna: chalice + current + ley diamond
+    default: return S(`<circle cx="50" cy="50" r="20"/>`);
+  }
+}
+
+/* ---------------- CARD DEFINITIONS ---------------- */
+const ARCANA=[
+ {id:0,rn:"0",name:"The Fool",cost:1,atk:1,vit:1,kw:["swift"],onPlay:null,
+  ab:"Swift — acts the moment it is summoned.",
+  lore:"He steps off the dormitory ledge at 3 a.m. and lands in the courtyard before the thought of falling has time to occur to him."},
+ {id:1,rn:"I",name:"The Magician",cost:2,atk:2,vit:2,kw:[],onPlay:{type:"damage",amount:1,target:"enemyAny"},
+  ab:"Rite: deal 1 to any enemy card or to the Order.",
+  lore:"First to find the deck in the steam tunnels. He learned the gestures by candlelight and has not slept the same since."},
+ {id:2,rn:"II",name:"The High Priestess",cost:3,atk:1,vit:4,kw:["ward"],onPlay:{type:"draw",amount:1,target:null},
+  ab:"Ward · Rite: draw a card from your deck.",
+  lore:"She keeps the ledger of names. Every initiate is written in; none are ever crossed out."},
+ {id:3,rn:"III",name:"The Empress",cost:4,atk:3,vit:5,kw:[],onPlay:{type:"buff",atk:1,vit:1,target:"friendAny"},
+  ab:"Rite: give a card in your circle +1/+1.",
+  lore:"The ivy on Thornwood Hall grows toward her window, no matter which room she is given."},
+ {id:4,rn:"IV",name:"The Emperor",cost:5,atk:5,vit:5,kw:["ward"],onPlay:null,
+  ab:"Ward — the Order must strike him before your other cards or your life.",
+  lore:"He chairs the meetings no one admits attending. His gavel is a femur older than the university charter."},
+ {id:5,rn:"V",name:"The Hierophant",cost:3,atk:2,vit:4,kw:[],onPlay:{type:"ramp",amount:1,target:null},
+  ab:"Rite: gain a Prahna permanently.",
+  lore:"He teaches the second-years which floorboards to pry up — and which to never, under any circumstance, touch."},
+ {id:6,rn:"VI",name:"The Lovers",cost:2,atk:2,vit:2,kw:[],onPlay:{type:"buff",atk:0,vit:2,target:"friendAny"},
+  ab:"Rite: give a card in your circle +0/+2.",
+  lore:"Two pledges who signed the book on the same night. Now their dreams arrive in matching pairs."},
+ {id:7,rn:"VII",name:"The Chariot",cost:4,atk:4,vit:3,kw:["swift"],onPlay:null,
+  ab:"Swift — acts the moment it is summoned.",
+  lore:"The groundskeeper's cart, drawn by nothing, leaves twin furrows across the quad before dawn."},
+ {id:8,rn:"VIII",name:"Strength",cost:3,atk:3,vit:4,kw:[],onPlay:{type:"buff",atk:2,vit:0,target:"friendAny"},
+  ab:"Rite: give a card in your circle +2/+0.",
+  lore:"She closed the lion's jaw with two fingers, the way one closes a book one has finished with."},
+ {id:9,rn:"IX",name:"The Hermit",cost:2,atk:1,vit:3,kw:["veiled"],onPlay:null,
+  ab:"Veiled — cannot be struck until it first attacks.",
+  lore:"Room 9 has been 'under renovation' for sixty years. The lantern in its window has never once gone out."},
+ {id:10,rn:"X",name:"Wheel of Fortune",cost:4,atk:3,vit:3,kw:[],onPlay:{type:"randomDamage",min:1,max:4,target:"enemyRandom"},
+  ab:"Rite: deal 1–4 to a random enemy (favouring their cards).",
+  lore:"It spins in the boiler room when no hand is near. The Order bets on it. The Order always, eventually, loses."},
+ {id:11,rn:"XI",name:"Justice",cost:3,atk:3,vit:3,kw:[],onPlay:{type:"destroyWeak",threshold:2,target:"enemyCreature"},
+  ab:"Rite: destroy an enemy card with 2 or less Vitality.",
+  lore:"She holds the scales over the disciplinary records. What she weighs, no dean alive can overturn."},
+ {id:12,rn:"XII",name:"The Hanged Man",cost:2,atk:0,vit:6,kw:["ward"],onPlay:null,
+  ab:"Ward — a wall of 6 Vitality the Order must break first.",
+  lore:"Suspended in the stairwell between the third and fourth floors — floors the building's blueprints do not show."},
+ {id:13,rn:"XIII",name:"Death",cost:5,atk:4,vit:4,kw:["reap"],onPlay:null,
+  ab:"Reap — any damage it deals to a card destroys that card outright.",
+  lore:"Not the end of the initiate, the Order insists. Only the end of the person they used to be."},
+ {id:14,rn:"XIV",name:"Temperance",cost:2,atk:2,vit:3,kw:[],onPlay:{type:"healFace",amount:3,target:null},
+  ab:"Rite: restore 3 Vitality to yourself.",
+  lore:"She pours the well-water between two cups and back. Drink, and the dreams come quieter for a little while."},
+ {id:15,rn:"XV",name:"The Devil",cost:4,atk:4,vit:4,kw:[],onPlay:{type:"drain",amount:2,target:null},
+  ab:"Rite: deal 2 to the Order and restore 2 to yourself.",
+  lore:"He countersigns the book in a second ink — the clause beneath the clause. You agreed to it. You simply do not remember."},
+ {id:16,rn:"XVI",name:"The Tower",cost:5,atk:3,vit:3,kw:[],onPlay:{type:"aoe",amount:2,target:null},
+  ab:"Rite: deal 2 to every card in the enemy circle.",
+  lore:"The bell tower struck thirteen the night Thornwood opened. Everyone inside felt it in their teeth."},
+ {id:17,rn:"XVII",name:"The Star",cost:2,atk:1,vit:3,kw:[],onPlay:{type:"healCreature",full:true,target:"friendAny"},
+  ab:"Rite: fully restore one card in your circle.",
+  lore:"On clear nights she empties the reservoir into the sky, and the sky, briefly, gives something back."},
+ {id:18,rn:"XVIII",name:"The Moon",cost:3,atk:3,vit:3,kw:["veiled"],onPlay:null,
+  ab:"Veiled — cannot be struck until it first attacks.",
+  lore:"Whatever you saw in the west window by moonlight — the Order advises you, very kindly, to disbelieve it."},
+ {id:19,rn:"XIX",name:"The Sun",cost:6,atk:6,vit:6,kw:[],onPlay:{type:"anthem",atk:1,vit:1,target:null},
+  ab:"Rite: give every card in your circle +1/+1.",
+  lore:"It rose, once, at midnight over the quad. Attendance at morning lectures has never quite recovered."},
+ {id:20,rn:"XX",name:"Judgement",cost:6,atk:5,vit:5,kw:[],onPlay:{type:"damage",amount:4,target:"enemyCreature"},
+  ab:"Rite: deal 4 to an enemy card.",
+  lore:"The trumpet sounds in the heating pipes. Names are read. Some of the named have not been seen since orientation."},
+ {id:21,rn:"XXI",name:"The World",cost:7,atk:7,vit:7,kw:["ward"],onPlay:null,
+  ab:"Ward — the closed circle, the great finisher.",
+  lore:"The last card. The closed circle. The thing the whole Order was built to keep turning — and to keep contained."},
+];
+const PRAHNA={id:99,rn:"·",name:"Prahna",cost:0,isLand:true,
+  ab:"Channel one per Rite. Accumulates; refreshes each turn to fuel your Arcana.",
+  lore:"Raw ambient current, drawn up through Thornwood's foundations along the old ley-seam. Tap it to spend; it returns with the dawn of each turn."};
+function cardById(id){return id===99?PRAHNA:ARCANA.find(c=>c.id===id);}
+
+/* ---------------- ENGINE (validated) ---------------- */
+const CFG={openingHand:4,coin:0,firstDrawSkip:true};
+let UID=1;
+function makeInstance(id,owner){const def=cardById(id);const inst={uid:UID++,defId:id,owner,name:def.name,rn:def.rn,isLand:!!def.isLand};
+ if(!def.isLand){inst.cost=def.cost;inst.atk=def.atk;inst.vit=def.vit;inst.maxVit=def.vit;inst.kw=[...def.kw];inst.onPlay=def.onPlay;inst.ready=false;inst.hasAttacked=false;}return inst;}
+function buildDeckList(){const list=[];for(let i=0;i<12;i++)list.push(99);const arc=[0,0,1,1,5,6,9,7,8,10,11,14,15,3,12,16,13,20];return list.concat(arc);}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function enemyOf(p){return p===1?0:1;}
+let G=null;
+function newGame(){UID=1;
+ function mk(owner){return{owner,vitality:20,maxVit:20,deck:shuffle(buildDeckList().map(id=>makeInstance(id,owner))),hand:[],board:[],prahna:0,essence:0,playedPrahnaThisTurn:false,fatigue:0};}
+ G={players:[mk(0),mk(1)],turn:0,active:0,winner:null,log:[]};
+ for(let p=0;p<2;p++)for(let i=0;i<CFG.openingHand;i++)drawCard(p);
+ for(let i=0;i<CFG.coin;i++)drawCard(1);
+ startTurn(0);return G;}
+function drawCard(p){const pl=G.players[p];if(pl.deck.length===0){pl.fatigue++;pl.vitality-=pl.fatigue;checkDeath();return null;}const c=pl.deck.pop();pl.hand.push(c);return c;}
+function startTurn(p){G.active=p;const pl=G.players[p];pl.playedPrahnaThisTurn=false;pl.essence=pl.prahna;pl.board.forEach(c=>c.ready=true);
+ if(!(G.turn===0&&CFG.firstDrawSkip))drawCard(p);G.turn++;}
+function hasWardNonVeiled(p){return G.players[p].board.some(c=>c.kw.includes("ward")&&!(c.kw.includes("veiled")&&!c.hasAttacked));}
+function attackable(attacker){const ep=enemyOf(attacker);const board=G.players[ep].board.filter(c=>!(c.kw.includes("veiled")&&!c.hasAttacked));const w=board.filter(c=>c.kw.includes("ward"));return w.length?w:board;}
+function canHitFace(attacker){return !hasWardNonVeiled(enemyOf(attacker));}
+function dealToCreature(c,a){c.vit-=a;if(c.vit<=0)destroy(c);}
+function destroy(c){const pl=G.players[c.owner];const i=pl.board.indexOf(c);if(i>=0)pl.board.splice(i,1);}
+function resolveOnPlay(inst,targetUid){const p=inst.owner,ep=enemyOf(p),eff=inst.onPlay;if(!eff)return;
+ const f=(uid,arr)=>arr.find(c=>c.uid===uid);
+ switch(eff.type){
+  case"damage":{if(eff.target==="enemyAny"){const t=targetUid!=null&&f(targetUid,G.players[ep].board);if(t)dealToCreature(t,eff.amount);else G.players[ep].vitality-=eff.amount;}
+   else if(eff.target==="enemyCreature"){const t=f(targetUid,G.players[ep].board)||G.players[ep].board[0];if(t)dealToCreature(t,eff.amount);}break;}
+  case"randomDamage":{const amt=eff.min+Math.floor(Math.random()*(eff.max-eff.min+1));const b=G.players[ep].board;if(b.length&&Math.random()<0.6)dealToCreature(b[Math.floor(Math.random()*b.length)],amt);else G.players[ep].vitality-=amt;break;}
+  case"destroyWeak":{const cands=G.players[ep].board.filter(c=>c.vit<=eff.threshold);const t=(targetUid!=null&&cands.find(c=>c.uid===targetUid))||cands.sort((a,b)=>b.atk-a.atk)[0];if(t)destroy(t);break;}
+  case"buff":{const t=(targetUid!=null&&f(targetUid,G.players[p].board))||G.players[p].board.filter(c=>c.uid!==inst.uid)[0]||inst;t.atk+=eff.atk;t.vit+=eff.vit;t.maxVit+=eff.vit;break;}
+  case"anthem":{G.players[p].board.forEach(c=>{c.atk+=eff.atk;c.vit+=eff.vit;c.maxVit+=eff.vit;});break;}
+  case"draw":{for(let i=0;i<eff.amount;i++)drawCard(p);break;}
+  case"ramp":{G.players[p].prahna+=eff.amount;G.players[p].essence+=eff.amount;break;}
+  case"healFace":{const pl=G.players[p];pl.vitality=Math.min(pl.maxVit,pl.vitality+eff.amount);break;}
+  case"drain":{G.players[ep].vitality-=eff.amount;const pl=G.players[p];pl.vitality=Math.min(pl.maxVit,pl.vitality+eff.amount);break;}
+  case"aoe":{G.players[ep].board.slice().forEach(c=>dealToCreature(c,eff.amount));break;}
+  case"healCreature":{const t=(targetUid!=null&&f(targetUid,G.players[p].board))||G.players[p].board.filter(c=>c.vit<c.maxVit)[0];if(t)t.vit=eff.full?t.maxVit:Math.min(t.maxVit,t.vit+(eff.amount||0));break;}
+ }checkDeath();}
+function summon(uid,targetUid){const p=G.active,pl=G.players[p];const i=pl.hand.findIndex(c=>c.uid===uid);if(i<0)return false;const c=pl.hand[i];if(c.isLand||c.cost>pl.essence)return false;
+ pl.hand.splice(i,1);pl.essence-=c.cost;c.ready=c.kw.includes("swift");pl.board.push(c);resolveOnPlay(c,targetUid);return true;}
+function playPrahna(){const p=G.active,pl=G.players[p];const i=pl.hand.findIndex(c=>c.isLand);if(i<0)return false;pl.hand.splice(i,1);pl.prahna++;pl.essence++;pl.playedPrahnaThisTurn=true;return true;}
+function attack(uid,target){const p=G.active,ep=enemyOf(p),pl=G.players[p];const a=pl.board.find(c=>c.uid===uid);if(!a||!a.ready||a.atk<=0)return false;
+ a.ready=false;a.hasAttacked=true;
+ if(target==="face"){if(!canHitFace(p))return false;G.players[ep].vitality-=a.atk;}
+ else{const d=G.players[ep].board.find(c=>c.uid===target);if(!d)return false;const aR=a.kw.includes("reap"),dR=d.kw.includes("reap"),aA=a.atk,dA=d.atk;
+  d.vit-=aA;a.vit-=dA;if(aR&&aA>0)d.vit=-99;if(dR&&dA>0)a.vit=-99;if(d.vit<=0)destroy(d);if(a.vit<=0)destroy(a);}
+ checkDeath();return true;}
+function endTurnEngine(){const nx=enemyOf(G.active);checkDeath();if(G.winner!==null)return;startTurn(nx);}
+function checkDeath(){const d0=G.players[0].vitality<=0,d1=G.players[1].vitality<=0;if(d0&&d1)G.winner=-1;else if(d1)G.winner=0;else if(d0)G.winner=1;}
+
+/* ---------------- UI ---------------- */
+const $=id=>document.getElementById(id);
+const UI={
+ toTitle(){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$('titleScreen').classList.add('active');this.closeSheets();this.closeInspect();},
+ openLore(){$('loreTitle').textContent="The Order of the Veiled Lantern";$('loreBody').innerHTML=LORE_HTML;$('loreSheet').classList.add('active');},
+ openHow(){$('loreTitle').textContent="How the Duel is Played";$('loreBody').innerHTML=HOW_HTML;$('loreSheet').classList.add('active');},
+ openCodex(){this.buildCodex();$('codexSheet').classList.add('active');},
+ closeSheets(){$('loreSheet').classList.remove('active');$('codexSheet').classList.remove('active');},
+ closeInspect(){$('inspect').classList.remove('active');},
+ buildCodex(){const g=$('codexGrid');if(g.dataset.built)return;
+  g.innerHTML=[...ARCANA,PRAHNA].map(c=>cardHTML(c,c.isLand)).join("");
+  [...g.children].forEach((el,i)=>{const c=[...ARCANA,PRAHNA][i];el.onclick=()=>UI.inspectDef(c);});
+  g.dataset.built="1";},
+ inspectDef(def){
+  $('inspectCard').innerHTML=`<div class="card bigcard ${def.isLand?'land':''}">${cardInner(def)}</div>`;
+  $('inspectLore').textContent=def.lore;
+  $('inspectAbility').textContent=def.ab||"";
+  $('inspectActions').innerHTML=`<button class="btn ghost" onclick="UI.closeInspect()">Close</button>`;
+  $('inspect').classList.add('active');},
+ inspectHand(uid){const pl=G.players[0];const inst=pl.hand.find(c=>c.uid===uid);if(!inst)return;const def=cardById(inst.defId);
+  $('inspectCard').innerHTML=`<div class="card bigcard ${inst.isLand?'land':''}">${cardInner(inst)}</div>`;
+  $('inspectLore').textContent=def.lore;
+  $('inspectAbility').textContent=def.ab||"";
+  const yours=G.active===0;
+  let acts=`<button class="btn ghost" onclick="UI.closeInspect()">Close</button>`;
+  if(yours){
+    if(inst.isLand && !pl.playedPrahnaThisTurn){acts=`<button class="btn primary" onclick="Game.channel(${uid})">Channel</button>`+acts;}
+    else if(!inst.isLand && inst.cost<=pl.essence){acts=`<button class="btn primary" onclick="Game.beginSummon(${uid})">Invoke</button>`+acts;}
+    else if(!inst.isLand){acts=`<span style="color:#8a6d2a;font-size:12px;align-self:center">Not enough Prahna</span>`+acts;}
+    else if(inst.isLand){acts=`<span style="color:#8a6d2a;font-size:12px;align-self:center">Prahna already channelled</span>`+acts;}
+  }
+  $('inspectActions').innerHTML=acts;
+  $('inspect').classList.add('active');},
+ toast(msg){const t=$('toast');t.textContent=msg;t.style.top="auto";t.style.bottom="38%";t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1400);},
+ banner(text){const b=$('banner');$('bannerText').textContent=text;b.classList.remove('show');void b.offsetWidth;b.classList.add('show');},
+ float(el,text,cls){const f=document.createElement('div');f.className='float '+cls;f.textContent=text;const r=el.getBoundingClientRect();
+  f.style.left=(r.left+r.width/2-12)+'px';f.style.top=(r.top+8)+'px';document.body.appendChild(f);setTimeout(()=>f.remove(),1000);},
+};
+
+/* card markup */
+function cardInner(c){const isLand=c.isLand;
+ return `<div class="frame"></div>
+  ${isLand?'':`<div class="cost">${c.cost}</div>`}
+  <div class="rn">${isLand?'· PRAHNA ·':c.rn}</div>
+  <div class="art">${ART(c.defId!=null?c.defId:c.id)}</div>
+  <div class="name">${c.name}</div>
+  ${isLand?'<div class="lwave">≈ ≈ ≈</div>':kwLine(c)}
+  ${isLand?'':`<div class="botstat"><span class="s a">${c.atk}</span><span class="s v">${c.vit}</span></div>`}`;}
+function kwLine(c){const kw=(c.kw||cardById(c.id||c.defId).kw||[]);if(!kw.length)return'';
+ const map={ward:"Ward",swift:"Swift",reap:"Reap",veiled:"Veiled"};return `<div class="kwline">${kw.map(k=>map[k]||k).join(" · ")}</div>`;}
+function cardHTML(c,isLand){return `<div class="card ${isLand?'land':''}">${cardInner(c)}</div>`;}
+
+/* ---------------- GAME CONTROLLER ---------------- */
+const Game={
+ sel:{mode:'idle',uid:null,castUid:null,castDef:null},
+ start(){newGame();this.sel={mode:'idle',uid:null,castUid:null,castDef:null};
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $('gameScreen').classList.add('active');UI.closeSheets();UI.closeInspect();
+  $('turnOrb').textContent="Your Rite";this.render();
+  UI.toast("Your Rite begins");},
+ confirmQuit(){if(confirm("Abandon the duel and return to the Veil?"))UI.toTitle();},
+
+ render(){
+  const you=G.players[0],foe=G.players[1];
+  $('youVit').textContent=Math.max(0,you.vitality);$('foeVit').textContent=Math.max(0,foe.vitality);
+  $('youDeck').textContent=you.deck.length;$('foeDeck').textContent=foe.deck.length;
+  this.renderRes('youRes',you);this.renderRes('foeRes',foe);
+  this.renderBoard('youBoard',you.board,0);this.renderBoard('foeBoard',foe.board,1);
+  this.renderHand();
+  const yours=G.active===0&&G.winner===null;
+  $('turnOrb').textContent=G.winner!==null?"— the Rite ends —":(yours?"Your Rite":"The Order's Rite");
+  $('endBtn').classList.toggle('waiting',!yours);
+  // face target highlight
+  $('foeOrb').classList.toggle('target',this.sel.mode==='attackFrom'&&canHitFace(0));
+  if(this.sel.mode==='castTarget'&&this.sel.castDef&&this.sel.castDef.onPlay&&this.sel.castDef.onPlay.target==='enemyAny')
+    $('foeOrb').classList.add('target');
+ },
+ renderRes(elId,pl){const el=$(elId);let h='<span class="res-label">Prahna</span>';
+  const total=Math.max(pl.prahna,0);for(let i=0;i<total;i++){const lit=i<pl.essence;h+=`<span class="pip land ${lit?'lit':''}"></span>`;}
+  if(total===0)h+='<span style="color:#4a4060;font-size:11px">—</span>';
+  el.innerHTML=h;},
+ renderBoard(elId,board,owner){const el=$(elId);el.classList.toggle('empty',board.length===0);
+  el.innerHTML=board.map(c=>this.tokenHTML(c,owner)).join("");
+  [...el.children].forEach((node,i)=>{const c=board[i];node.onclick=()=>this.tapToken(c.uid,owner);});},
+ tokenHTML(c,owner){const def=cardById(c.defId);const yourTurn=G.active===0&&G.winner===null;
+  const isReadyMine=owner===0&&c.ready&&c.atk>0&&yourTurn;
+  const selected=this.sel.mode==='attackFrom'&&this.sel.uid===c.uid;
+  let cls='token';
+  if(c.kw.includes('ward'))cls+=' ward';
+  if(c.kw.includes('veiled')&&!c.hasAttacked)cls+=' veiled';
+  if(isReadyMine&&!selected)cls+=' ready';
+  if(selected)cls+=' selected';
+  // target highlight
+  const tset=this._targetSet;
+  if(tset&&tset.has(c.uid))cls+=' target';
+  const kwIcon=c.kw.includes('reap')?'☠':c.kw.includes('ward')?'⛨':c.kw.includes('veiled')?'☾':c.kw.includes('swift')?'⚡':'';
+  return `<div class="${cls}" data-uid="${c.uid}">
+    <div class="trn">${c.rn}</div>
+    ${kwIcon?`<span class="kwdot">${kwIcon}</span>`:''}
+    <div class="tart">${ART(c.defId)}</div>
+    <div class="tstat"><span class="atk">${c.atk}</span><span class="vit">${c.vit}</span></div>
+  </div>`;},
+ renderHand(){const el=$('hand');const hand=G.players[0].hand;const yours=G.active===0&&G.winner===null;
+  el.innerHTML=hand.map(c=>{const playable=yours&&((c.isLand&&!G.players[0].playedPrahnaThisTurn)||(!c.isLand&&c.cost<=G.players[0].essence));
+    const cls='card '+(c.isLand?'land ':'')+(playable?'playable ':(yours&&!c.isLand&&c.cost>G.players[0].essence?'unaffordable ':''));
+    return `<div class="${cls}" data-uid="${c.uid}">${cardInner(c)}</div>`;}).join("");
+  [...el.children].forEach((node,i)=>{const c=hand[i];node.onclick=()=>UI.inspectHand(c.uid);});},
+
+ /* ---- interactions ---- */
+ channel(uid){if(G.active!==0)return;UI.closeInspect();if(playPrahna()){this.render();}},
+ beginSummon(uid){if(G.active!==0)return;UI.closeInspect();
+  const pl=G.players[0];const inst=pl.hand.find(c=>c.uid===uid);if(!inst||inst.cost>pl.essence)return;
+  const def=cardById(inst.defId);
+  // does it need a target with valid options?
+  const need=this.castNeedsTarget(def);
+  if(!need){ // summon and auto-resolve
+    summon(uid,null);this.afterPlay(def);return;}
+  // place card on board first WITHOUT resolving, then await target
+  pl.hand.splice(pl.hand.indexOf(inst),1);pl.essence-=inst.cost;inst.ready=inst.kw.includes('swift');pl.board.push(inst);
+  const tset=this.validTargets(def,inst);
+  if(tset.uids.size===0 && !tset.face){ // nothing valid -> resolve null (fizzle)
+    resolveOnPlay(inst,null);this.afterPlay(def);return;}
+  this.sel={mode:'castTarget',uid:null,castUid:inst.uid,castDef:def};
+  this._targetSet=tset.uids;this.render();
+  UI.toast(this.castPrompt(def));},
+ afterPlay(def){this._targetSet=null;this.sel={mode:'idle',uid:null,castUid:null,castDef:null};
+  this.render();this.checkEnd();
+  if(def&&def.onPlay&&['aoe','anthem'].includes(def.onPlay.type))UI.banner(def.name);},
+ castNeedsTarget(def){if(!def.onPlay)return false;const t=def.onPlay.target;return t==='enemyAny'||t==='enemyCreature'||t==='friendAny'||def.onPlay.type==='destroyWeak';},
+ castPrompt(def){const ty=def.onPlay.type;if(ty==='buff'||ty==='healCreature')return"Choose a card in your circle";if(ty==='destroyWeak')return"Choose a frail enemy card";if(ty==='damage'&&def.onPlay.target==='enemyAny')return"Choose an enemy card — or strike the Order";return"Choose an enemy card";},
+ validTargets(def,inst){const uids=new Set();let face=false;const e=def.onPlay;const ep=1;
+  if(!e)return{uids,face};
+  if(e.target==='friendAny'){G.players[0].board.forEach(c=>{if(e.type==='healCreature'){if(c.vit<c.maxVit||true)uids.add(c.uid);}else uids.add(c.uid);});}
+  else if(e.target==='enemyCreature')G.players[ep].board.forEach(c=>uids.add(c.uid));
+  else if(e.type==='destroyWeak')G.players[ep].board.filter(c=>c.vit<=e.threshold).forEach(c=>uids.add(c.uid));
+  else if(e.target==='enemyAny'){G.players[ep].board.forEach(c=>uids.add(c.uid));face=true;}
+  return{uids,face};},
+
+ tapToken(uid,owner){
+  if(G.winner!==null)return;
+  // casting a targeted spell
+  if(this.sel.mode==='castTarget'){
+    if(this._targetSet&&this._targetSet.has(uid)){const inst=this.findBoard(this.sel.castUid);resolveOnPlay(inst,uid);this.afterPlay(this.sel.castDef);}
+    else {UI.toast("Not a valid target");}
+    return;
+  }
+  const yours=G.active===0;
+  if(this.sel.mode==='attackFrom'){
+    if(owner===1){ // attack enemy creature
+      const valid=attackable(0).some(c=>c.uid===uid);
+      if(valid){this.doAttack(this.sel.uid,uid);}else{UI.toast("A Ward blocks the way");}
+      return;
+    } else { // tapped own
+      if(uid===this.sel.uid){this.sel={mode:'idle',uid:null};this._targetSet=null;this.render();return;}
+      const c=this.findBoard(uid);if(c&&c.owner===0&&c.ready&&c.atk>0&&yours){this.selectAttacker(uid);return;}
+      this.openTokenInfo(uid);return;
+    }
+  }
+  // idle
+  const c=this.findBoard(uid);
+  if(owner===0&&c&&c.ready&&c.atk>0&&yours){this.selectAttacker(uid);return;}
+  this.openTokenInfo(uid);
+ },
+ openTokenInfo(uid){const c=this.findBoard(uid);if(!c)return;const def=cardById(c.defId);UI.inspectDef(def);},
+ selectAttacker(uid){this.sel={mode:'attackFrom',uid};const ts=new Set(attackable(0).map(c=>c.uid));this._targetSet=ts;this.render();
+  UI.toast(canHitFace(0)?"Strike a card — or the Order itself":"Strike past their Ward");},
+ tapFace(owner){
+  if(G.winner!==null)return;
+  if(this.sel.mode==='castTarget'&&this.sel.castDef&&this.sel.castDef.onPlay&&this.sel.castDef.onPlay.target==='enemyAny'){
+    const inst=this.findBoard(this.sel.castUid);resolveOnPlay(inst,null);this.afterPlay(this.sel.castDef);return;}
+  if(owner===1&&this.sel.mode==='attackFrom'){
+    if(canHitFace(0)){this.doAttack(this.sel.uid,'face');}else{UI.toast("A Ward blocks the way");}
+  }
+ },
+ doAttack(uid,target){const a=this.findBoard(uid);const before=target==='face'?G.players[1].vitality:null;
+  attack(uid,target);
+  // animate
+  this.sel={mode:'idle',uid:null};this._targetSet=null;
+  this.render();
+  this.checkEnd();
+ },
+ findBoard(uid){for(const p of[0,1]){const c=G.players[p].board.find(x=>x.uid===uid);if(c)return c;}return null;},
+
+ endTurn(){if(G.active!==0||G.winner!==null)return;this.sel={mode:'idle',uid:null};this._targetSet=null;
+  endTurnEngine();this.render();if(this.checkEnd())return;
+  $('turnOrb').textContent="The Order's Rite";UI.banner("The Order Acts");
+  setTimeout(()=>this.aiTurn(),900);},
+
+ /* ---- AI (same heuristic that was simulated) ---- */
+ aiTurn(){
+  const step=()=>{
+   if(G.winner!==null){this.render();this.checkEnd();return;}
+   const p=G.active,pl=G.players[p];
+   // play prahna
+   if(!pl.playedPrahnaThisTurn&&pl.hand.some(c=>c.isLand)){playPrahna();this.render();return setTimeout(step,650);}
+   // summon best affordable
+   const aff=pl.hand.filter(c=>!c.isLand&&c.cost<=pl.essence).sort((a,b)=>b.cost-a.cost);
+   if(aff.length){const c=aff[0];summon(c.uid,this.aiTarget(c));this.render();this.checkEnd();
+     if(c.onPlay&&['aoe','anthem'].includes(c.onPlay.type))UI.banner(c.name);
+     return setTimeout(step,750);}
+   // attacks
+   const ep=enemyOf(p);const attackers=pl.board.filter(c=>c.ready&&c.atk>0);
+   for(const a of attackers){
+     const targets=attackable(p);let best=null;
+     for(const t of targets){const kt=a.atk>=t.vit,ku=t.atk>=a.vit;let s=0;if(kt)s+=t.atk+t.vit+(t.kw.includes('ward')?3:0);if(ku)s-=a.atk+a.vit;if(!kt)s-=1;if(best===null||s>best.score)best={t,score:s};}
+     const fo=canHitFace(p),ahead=pl.board.length>=G.players[ep].board.length;
+     if(fo&&(G.players[ep].vitality<=a.atk||ahead||best===null||best.score<=0))attack(a.uid,'face');
+     else if(best)attack(a.uid,best.t.uid);
+     this.render();this.checkEnd();
+     if(G.winner!==null)return;
+     return setTimeout(step,650);
+   }
+   // nothing left -> end AI turn
+   endTurnEngine();this.render();if(this.checkEnd())return;
+   $('turnOrb').textContent="Your Rite";UI.banner("Your Rite");UI.toast("Your Rite");
+  };
+  setTimeout(step,500);
+ },
+ aiTarget(card){const eff=card.onPlay;if(!eff)return null;const p=G.active,ep=enemyOf(p);
+  if(eff.target==='enemyCreature'||eff.type==='destroyWeak'){const b=G.players[ep].board.filter(c=>eff.type==='destroyWeak'?c.vit<=eff.threshold:true);return b.sort((a,b)=>b.atk-a.atk)[0]?(b.sort((a,b)=>b.atk-a.atk)[0].uid):null;}
+  if(eff.target==='friendAny'){const b=G.players[p].board.filter(c=>c.uid!==card.uid);return b.length?b.sort((a,b)=>b.atk-a.atk)[0].uid:null;}
+  if(eff.target==='enemyAny'){const b=G.players[ep].board.slice().sort((a,b)=>(a.vit-a.atk)-(b.vit-b.atk));const k=b.find(c=>c.vit<=eff.amount);return k?k.uid:null;}
+  return null;},
+
+ checkEnd(){if(G.winner===null)return false;
+  setTimeout(()=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+   const win=G.winner===0;const t=$('resultTitle');
+   t.textContent=win?"The Veil Holds":G.winner===-1?"Mutual Ruin":"The Veil Breaks";
+   t.className='result-title '+(win?'win':'lose');
+   $('resultFlavor').textContent=win
+     ?"The cards fall still. Whatever stirred beneath Thornwood Hall settles back into the dark, content — for now — to wait. Your name remains in the ledger, uncrossed. The lantern in Room IX flickers once, in something like approval."
+     :G.winner===-1?"Both circles collapse at once. The deck is found weeks later, shuffled, on a stairwell that the blueprints do not show."
+     :"The Order's hand closes over yours. You will not remember signing the second clause. You will only notice, some mornings, that the lantern in Room IX now burns for you.";
+   $('resultScreen').classList.add('active');},700);
+  return true;},
+};
+
+/* ---------------- LORE TEXT ---------------- */
+const LORE_HTML=`
+<p class="lore-p dropcap">Thornwood Hall is the oldest residence on the campus of <span class="cap">Blackmarsh State University</span> — a soot-dark Victorian dormitory the housing office quietly stopped assigning freshmen to in 1974, and then, just as quietly, started again. Its east wing has a sub-basement that appears on no fire-safety map. Its bell tower struck thirteen the night the building opened, and the bell has not been rung since.</p>
+<p class="lore-p">Somewhere beneath the steam tunnels, in a draught that smells of cold pennies, a deck of cards was found by a sophomore who has not been heard from under that name again.</p>
+
+<div class="lore-h">The Order of the Veiled Lantern</div>
+<p class="lore-p">They are not a fraternity. They have no charter the Dean will acknowledge, no table at the activities fair, no group photo in any yearbook — though attentive students notice the same lantern, lit, in the same fourth-floor window of every yearbook going back a century.</p>
+<p class="lore-p">The Order initiates by invitation only, and the invitation is always a single card slipped under a door. To accept is to sign the ledger kept by <span class="cap">the High Priestess</span>. Initiates are told the Order exists to <em>study</em> what sleeps beneath Thornwood. The senior members know the truth is closer to <em>babysitting</em>.</p>
+
+<div class="lore-h">Prahna — the Current Beneath</div>
+<p class="lore-p">The university was built, deliberately or not, atop a seam of raw psychic current the Order calls <span class="cap">Prahna</span>. It pools in the foundations and rises with the dawn. Initiates learn to draw it up through the old copper pipes and spend it — and like the tide, it returns each morning, a little more each time one learns to ask.</p>
+<p class="lore-p">Prahna cannot harm. It can only <em>permit</em>. Every Arcana an initiate calls into the circle is paid for in current accumulated, tapped, and let go.</p>
+
+<div class="lore-h">The Rite of the Twenty-Two</div>
+<p class="lore-p">Rank within the Order is not granted. It is <em>won</em>, across a chalk circle in the Room IX common area, in a formal duel called the Rite. Two initiates each take a hand from the deck and call the Major Arcana into being — figures of paint and intention that strike, ward, and unmake one another until one duelist's spirit (their <span class="cap">Vitality</span>) is spent.</p>
+<p class="lore-p">Tonight the deck has dealt <em>you</em> in. Across the circle sits no fellow student. It sits as <span class="cap">The Order</span> itself — or the thing the Order has spent a hundred years pretending to govern. Win, and the Veil holds another season. Lose, and your lantern joins the others in the window.</p>
+
+<div class="lore-h">A Note Found Pinned Inside the Lid of the Card-Box</div>
+<p class="lore-p"><em>"The Arcana are not symbols of the thing below. They are its fingers. When you play The Tower, something far under the dormitory feels you do it. Play kindly. Play to win. Do not, whatever the temptation, play The World unless you are absolutely certain you can close the circle again."</em></p>
+`;
+const HOW_HTML=`
+<p class="lore-p">A duel is a turn-based contest of the Major Arcana. You are the <span class="cap">Initiate</span>; your opponent is <span class="cap">The Order</span>. Each of you begins with <b>20 Vitality</b>. Reduce the Order's Vitality to 0 to win the Rite.</p>
+<div class="lore-h">1 · Channel Prahna</div>
+<p class="lore-p">Each turn you may channel <b>one Prahna</b> card from your hand. Prahna accumulate turn over turn, and refresh fully at the start of each of your turns. Tap the card, then "Channel."</p>
+<div class="lore-h">2 · Invoke the Arcana</div>
+<p class="lore-p">Tap a card to study its art, lore, and rite, then "Invoke" to pay its Prahna cost and summon it into your circle. Many Arcana have a <b>Rite</b> — a one-time effect that fires when summoned (damage, healing, drawing, destruction). Some need a target; you'll be prompted to choose.</p>
+<div class="lore-h">3 · Strike</div>
+<p class="lore-p">A summoned card has <span class="cap">summoning sickness</span> and cannot strike the turn it arrives — unless it has <b>Swift</b>. On later turns, tap a glowing ready card, then tap an enemy card to clash, or tap the Order's sigil to strike its Vitality directly.</p>
+<div class="lore-h">Keywords of the Deck</div>
+<p class="lore-p"><b>⛨ Ward</b> — must be struck before the cards behind it or the Order's life.<br>
+<b>⚡ Swift</b> — may strike the turn it is summoned.<br>
+<b>☠ Reap</b> — any damage it deals to a card destroys that card outright.<br>
+<b>☾ Veiled</b> — cannot be struck until it has first attacked.</p>
+<div class="lore-h">A Combat Note</div>
+<p class="lore-p">When two cards clash, <em>each</em> deals its Attack to the other. Trade wisely — and remember that the Order, going second, draws an extra breath of fortune. Press your tempo while it is yours.</p>
+`;
+
+/* ---------------- atmosphere ---------------- */
+(function embers(){const wrap=$('embers');for(let i=0;i<26;i++){const e=document.createElement('div');e.className='ember';
+ e.style.left=Math.random()*100+'%';e.style.animationDuration=(7+Math.random()*9)+'s';e.style.animationDelay=(Math.random()*9)+'s';
+ const s=1+Math.random()*2.4;e.style.width=s+'px';e.style.height=s+'px';wrap.appendChild(e);}})();
+
+</script>
+</body>
+</html>

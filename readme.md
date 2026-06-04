@@ -1,8 +1,12 @@
 # ml_models
 
-test out here:
+test out 
+
+https://davidpomarede.github.io/ml_models/gravitron.html
 
 https://davidpomarede.github.io/ml_models/synth_circles.html
+
+
 
 Testing out different model structures with Python and Processing.
 
